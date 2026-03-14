@@ -14,22 +14,28 @@ logging.basicConfig(level=logging.INFO)
 
 user_orders = {}
 
+# 🔹 Asosiy persistent menu
+MAIN_MENU = InlineKeyboardMarkup([
+    [
+        InlineKeyboardButton("⭐ Stars olish", callback_data="stars"),
+        InlineKeyboardButton("💎 Premium olish", callback_data="premium")
+    ],
+    [
+        InlineKeyboardButton("📢 Reklama xizmati", callback_data="ads"),
+        InlineKeyboardButton("📞 Bog'lanish", callback_data="contact")
+    ],
+    [
+        InlineKeyboardButton("🧾 Savdolar", callback_data="sales")
+    ]
+])
+
 # START
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    keyboard = [
-        [InlineKeyboardButton("⭐ Stars olish", callback_data="stars")],
-        [InlineKeyboardButton("💎 Premium olish", callback_data="premium")],
-        [InlineKeyboardButton("📢 Reklama xizmati", callback_data="ads")],
-        [InlineKeyboardButton("📞 Bog'lanish", callback_data="contact")],
-        [InlineKeyboardButton("🧾 Savdolar", callback_data="sales")]
-    ]
-
     await update.message.reply_text(
         "*Starschi Bot ga xush kelibsiz!* 🚀\n\n"
         "_Kerakli xizmatni tanlang:_",
         parse_mode="Markdown",
-        reply_markup=InlineKeyboardMarkup(keyboard)
+        reply_markup=MAIN_MENU  # Asosiy menu har doim ko‘rinadi
     )
 
 # BUTTON HANDLER
@@ -39,7 +45,6 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     if query.data == "stars":
-
         text = (
             "*⭐ Telegram Stars narxlari*\n\n"
             "`50 ta` — *13,990 so'm*\n"
@@ -48,14 +53,10 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "`500 ta` — *109,990 so'm*\n\n"
             "_Eng tez va ishonchli xizmat!_"
         )
-
         kb = [[InlineKeyboardButton("🛒 Buyurtma berish", callback_data="buy_stars")]]
-
-        await query.message.edit_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
-
+        await query.message.reply_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
 
     elif query.data == "premium":
-
         text = (
             "*💎 Telegram Premium*\n\n"
             "`1 oy` — *39,990 so'm*\n"
@@ -64,14 +65,10 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "`12 oy` — *349,990 so'm*\n\n"
             "_Premium bilan Telegramdan maksimal foydalaning!_"
         )
-
         kb = [[InlineKeyboardButton("🛒 Buyurtma berish", callback_data="buy_premium")]]
-
-        await query.message.edit_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
-
+        await query.message.reply_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
 
     elif query.data == "ads":
-
         text = (
             "*📢 Reklama xizmati*\n\n"
             "*Avto habar bilan reklama*\n\n"
@@ -82,81 +79,61 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "*Batafsil:* "
             f"{ADMIN_USERNAME}"
         )
-
         kb = [[InlineKeyboardButton("🛒 Buyurtma qilish", callback_data="buy_ads")]]
-
-        await query.message.edit_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
-
+        await query.message.reply_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
 
     elif query.data == "contact":
-
         text = (
             "*📞 Bog'lanish*\n\n"
             f"Admin: {ADMIN_USERNAME}\n"
             "Qo'llab quvvatlash: +998XXXXXXXXX"
         )
-
-        await query.message.edit_text(text, parse_mode="Markdown")
-
+        await query.message.reply_text(text, parse_mode="Markdown")
 
     elif query.data == "sales":
-
         kb = [[InlineKeyboardButton("📢 Kanalga o'tish", url=SALES_CHANNEL)]]
-
-        await query.message.edit_text(
+        await query.message.reply_text(
             "*🧾 Qilingan savdolar va isbotlar shu kanalda!*",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(kb)
         )
 
     elif query.data == "buy_stars":
-
         user_orders[query.from_user.id] = "stars"
-
         await query.message.reply_text(
             "*Nechta Stars sotib olasiz?*\n\n"
             "_Masalan:_ `100`",
             parse_mode="Markdown"
         )
 
-
     elif query.data == "buy_premium":
-
         user_orders[query.from_user.id] = "premium"
-
         await query.message.reply_text(
             "*Necha oylik Premium kerak?*\n\n"
             "_Masalan:_ `3`",
             parse_mode="Markdown"
         )
 
-
     elif query.data == "buy_ads":
-
         kb = [
             [InlineKeyboardButton("12 soat", callback_data="ads_12")],
             [InlineKeyboardButton("24 soat", callback_data="ads_24")],
             [InlineKeyboardButton("1 hafta", callback_data="ads_week")],
             [InlineKeyboardButton("1 oy", callback_data="ads_month")]
         ]
-
         await query.message.reply_text(
             "*Reklama paketini tanlang:*",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(kb)
         )
 
-
 # TEXT MESSAGE
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     user = update.message.from_user.id
     text = update.message.text
 
     if user_orders.get(user) == "stars":
-
         price = "25,990 so'm"
-
         pay_text = (
             "*To'lov ma'lumotlari*\n\n"
             f"Karta: `{CARD}`\n"
@@ -164,16 +141,11 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"*Summa:* {price}\n\n"
             "_To'lov qilgach pastdagi tugmani bosing._"
         )
-
         kb = [[InlineKeyboardButton("✅ To'lov qildim", callback_data="paid")]]
-
         await update.message.reply_text(pay_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
 
-
     elif user_orders.get(user) == "premium":
-
         price = "109,990 so'm"
-
         pay_text = (
             "*To'lov ma'lumotlari*\n\n"
             f"Karta: `{CARD}`\n"
@@ -181,17 +153,12 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"*Summa:* {price}\n\n"
             "_To'lov qilgach tugmani bosing._"
         )
-
         kb = [[InlineKeyboardButton("✅ To'lov qildim", callback_data="paid")]]
-
         await update.message.reply_text(pay_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
-
 
 # CHECK
 async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     user = update.message.from_user
-
     await context.bot.send_photo(
         ADMIN_ID,
         update.message.photo[-1].file_id,
@@ -202,16 +169,13 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ),
         parse_mode="Markdown"
     )
-
     await update.message.reply_text(
         "*To'lov qabul qilindi.*\n\n"
         "_1-6 soat ichida javob beramiz._",
         parse_mode="Markdown"
     )
 
-
 def main():
-
     app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
@@ -220,7 +184,6 @@ def main():
     app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
 
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()

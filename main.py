@@ -100,7 +100,8 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("1 hafta", callback_data="ads_week")],
             [InlineKeyboardButton("1 oy", callback_data="ads_month")]
         ]
-        await query.message.reply_text("*Reklama paketini tanlang:*", parse_mode="Markdown",reply_markup=InlineKeyboardMarkup(kb))
+        await query.message.reply_text("*Reklama paketini tanlang:*", parse_mode="Markdown",
+reply_markup=InlineKeyboardMarkup(kb))
     
     # Reklama paket tanlanganda
     elif query.data in ["ads_12", "ads_24", "ads_week", "ads_month"]:

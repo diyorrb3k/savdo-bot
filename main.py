@@ -8,7 +8,7 @@ ADMIN_USERNAME = "@diyor_wa"
 SALES_CHANNEL = "https://t.me/savdolarkanali"
 
 CARD = "8600454566778804"
-CARD_NAME = "Eshmatov Toshmat"
+CARD_NAME = "Abdurashidov Shahzod"
 
 logging.basicConfig(level=logging.INFO)
 user_orders = {}

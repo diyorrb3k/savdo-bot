@@ -77,9 +77,16 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     elif text == "📞 Bog'lanish":
+
+        kb = [
+            [InlineKeyboardButton("👤 Admin bilan yozish", url=f"https://t.me/{ADMIN_USERNAME.replace('@','')}")]
+        ]
+
         await update.message.reply_text(
-            f"*📞 Bog'lanish*\n\nAdmin: {ADMIN_USERNAME}",
-            parse_mode="Markdown"
+            "*📞 Bog'lanish*\n\n"
+            "Savollar yoki buyurtma bo'yicha admin bilan bog'laning.",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(kb)
         )
 
     elif text == "🧾 Savdolar":
@@ -97,6 +104,7 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if query.data.startswith("stars_") or query.data.startswith("premium_") or query.data.startswith("ads_"):
         service, val = query.data.split("_")
+
         user_orders[query.from_user.id] = (service, val)
 
         kb = [
@@ -141,6 +149,8 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if user.id in waiting_check:
 
+        order = user_orders.get(user.id)
+
         await context.bot.forward_message(
             ADMIN_ID,
             update.message.chat.id,
@@ -149,7 +159,10 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await context.bot.send_message(
             ADMIN_ID,
-            f"*Yangi to'lov cheki*\n\nUser: @{user.username}\nID: {user.id}\nXizmat: {user_orders.get(user.id)}",
+            "*Yangi buyurtma*\n\n"
+            f"User: @{user.username}\n"
+            f"ID: {user.id}\n"
+            f"Xizmat: {order}",
             parse_mode="Markdown"
         )
 

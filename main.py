@@ -2,7 +2,7 @@ import logging
 from telegram import *
 from telegram.ext import *
 
-BOT_TOKEN = "token"
+BOT_TOKEN = "8655830918:AAGoSVFsZdZokmYOBImr-ctOeTBsZeDWkdc"
 ADMIN_ID = 8398525143
 ADMIN_USERNAME = "@diyor_wa"
 SALES_CHANNEL = "https://t.me/savdolarkanali"

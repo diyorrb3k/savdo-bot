@@ -1,187 +1,279 @@
-import logging
-from telegram import *
-from telegram.ext import *
+from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-BOT_TOKEN = "8655830918:AAGoSVFsZdZokmYOBImr-ctOeTBsZeDWkdc"
-ADMIN_ID = 8398525143
-ADMIN_USERNAME = "@diyor_wa"
-SALES_CHANNEL = "https://t.me/savdolarkanali"
+# ✅ TOKENNI SHU YERGA QO'YASAN (BotFather token)
+import os
+TOKEN = os.getenv("BOT_TOKEN")  # BotFather tokenini shu Environment Variable orqali o‘qiydi
 
-CARD = "8600999988887777"
-CARD_NAME = "Eshmatov Toshmat"
+ADMIN_ID = 8398525143   # admin telegram id
 
-logging.basicConfig(level=logging.INFO)
-user_orders = {}
-waiting_check = set()
+# Admin kontakt
+ADMIN_USERNAME = "@diyor_WA"
+ADMIN_PHONE = "+998881077333"
 
-MAIN_MENU = ReplyKeyboardMarkup(
-    [
-        ["⭐ Stars olish", "💎 Premium olish"],
-        ["📢 Reklama xizmati", "📞 Bog'lanish"],
-        ["🧾 Savdolar"]
-    ],
-    resize_keyboard=True
-)
+# buyurtma va admin-contact holatini saqlash
+order_mode = {}
+contact_mode = {}
+
+# ✅ 5 ta knopka (o'zgarmaydi)
+keyboard = [
+    ["👨 Erkaklar atirlari", "👩 Ayollar atirlari"],
+    ["🔥 Chegirmalar", "📦 Buyurtma berish"],
+    ["📞 Admin bilan bog‘lanish"]
+]
+reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+
+# ====== RASMLAR ======
+IMG_DIOR_SAUVAGE = "https://elcos.uz/static/siteApp/media/f3bfe6a4-0d7a-4142-8795-025eeec8267b.jpg"
+IMG_LV_IMAGINATION = "https://olcha.uz/image/700x700/products/2022-03-10/louis-vuitton-imagination-edp-u-100ml-original-39821-0.jpeg"
+IMG_BLEU_DE_CHANEL = "https://olcha.uz/image/700x700/products/2022-02-07/chanel-bleu-de-chanel-edp-100ml-original-35443-0.jpeg"
+
+IMG_GUCCI_FLORA = "https://dutyfree.uz/thumb/2/IRc9N72JVJ25TfdcZZ5qbg/r/d/2_438.jpg"
+IMG_BACCARAT = "https://www.prom.uz/_ipx/f_webp/https://devel.prom.uz/upload/product_logos/77/bd/77bd370d9652e9d406d11823b98c564a.jpg"
+IMG_CHANEL_CHANCE = "https://elisium.uz/thumb/2/NvF66IHxlQmn-lqMwhWOcw/r/d/chance-eau-de-toilette-spray-3-4fl-oz_packshot-default-126460-8841593683998-scale-2_00x.jpg"
+
+
+# MarkdownV2 xatolarini oldini olish uchun escape (o'zgarmaydi)
+def esc(text: str) -> str:
+    if text is None:
+        return ""
+    for ch in r"\_*[]()~`>#+-=|{}.!":
+        text = text.replace(ch, f"\\{ch}")
+    return text
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = (
+        "Assalomu alaykum\\! 👋\n\n"
+        "✨ *Atirlar Dunyosi* botiga xush kelibsiz 🧴\n\n"
+        "Quyidagi bo‘limlardan birini tanlang 👇"
+    )
     await update.message.reply_text(
-        "*Starschi Bot ga xush kelibsiz!* 🚀\n\n"
-        "_Kerakli xizmatni tanlang:_",
-        parse_mode="Markdown",
-        reply_markup=MAIN_MENU
+        msg,
+        reply_markup=reply_markup,
+        parse_mode="MarkdownV2"
     )
 
-async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
 
-    if text == "⭐ Stars olish":
-        kb = [
-            [InlineKeyboardButton("50 ta — 13,990 so'm", callback_data="stars_50")],
-            [InlineKeyboardButton("100 ta — 25,990 so'm", callback_data="stars_100")],
-            [InlineKeyboardButton("250 ta — 59,990 so'm", callback_data="stars_250")],
-            [InlineKeyboardButton("500 ta — 109,990 so'm", callback_data="stars_500")]
-        ]
-
-        await update.message.reply_text(
-            "*⭐ Telegram Stars narxlari*",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(kb)
-        )
-
-    elif text == "💎 Premium olish":
-        kb = [
-            [InlineKeyboardButton("1 oy — 39,990 so'm", callback_data="premium_1")],
-            [InlineKeyboardButton("3 oy — 109,990 so'm", callback_data="premium_3")],
-            [InlineKeyboardButton("6 oy — 199,990 so'm", callback_data="premium_6")],
-            [InlineKeyboardButton("12 oy — 349,990 so'm", callback_data="premium_12")]
-        ]
-
-        await update.message.reply_text(
-            "*💎 Telegram Premium*",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(kb)
-        )
-
-    elif text == "📢 Reklama xizmati":
-        kb = [
-            [InlineKeyboardButton("12 soat — 14,990 so'm", callback_data="ads_12")],
-            [InlineKeyboardButton("24 soat — 29,990 so'm", callback_data="ads_24")],
-            [InlineKeyboardButton("1 hafta — 99,990 so'm", callback_data="ads_week")],
-            [InlineKeyboardButton("1 oy — 339,990 so'm", callback_data="ads_month")]
-        ]
-
-        await update.message.reply_text(
-            "*📢 Reklama xizmati*",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(kb)
-        )
-
-    elif text == "📞 Bog'lanish":
-
-        kb = [
-            [InlineKeyboardButton("👤 Admin bilan yozish", url=f"https://t.me/{ADMIN_USERNAME.replace('@','')}")]
-        ]
-
-        await update.message.reply_text(
-            "*📞 Bog'lanish*\n\n"
-            "Savollar yoki buyurtma bo'yicha admin bilan bog'laning.",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(kb)
-        )
-
-    elif text == "🧾 Savdolar":
-        kb = [[InlineKeyboardButton("Kanalga o'tish", url=SALES_CHANNEL)]]
-
-        await update.message.reply_text(
-            "*🧾 Qilingan savdolar va isbotlar shu kanalda!*",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(kb)
-        )
-
-async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    if query.data.startswith("stars_") or query.data.startswith("premium_") or query.data.startswith("ads_"):
-        service, val = query.data.split("_")
-
-        user_orders[query.from_user.id] = (service, val)
-
-        kb = [
-            [InlineKeyboardButton("👤 Admin orqali", url=f"https://t.me/{ADMIN_USERNAME.replace('@','')}")],
-            [InlineKeyboardButton("💳 Karta orqali", callback_data="card")]
-        ]
-
-        await query.message.reply_text(
-            "*Qaysi uslubda to'laysiz?*",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(kb)
-        )
-
-    elif query.data == "card":
-
-        text = (
-            "*To'lov ma'lumotlari*\n\n"
-            f"Karta: `{CARD}`\n"
-            f"Ega: *{CARD_NAME}*"
-        )
-
-        kb = [[InlineKeyboardButton("✅ To'lov qildim", callback_data="paid")]]
-
-        await query.message.reply_text(
-            text,
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(kb)
-        )
-
-    elif query.data == "paid":
-
-        waiting_check.add(query.from_user.id)
-
-        await query.message.reply_text(
-            "*Iltimos to'lov chekini yuboring*",
-            parse_mode="Markdown"
-        )
-
-async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
+async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text or ""
     user = update.message.from_user
+    user_id = user.id
+    chat_id = update.effective_chat.id
 
-    if user.id in waiting_check:
+    # ===== ERKAKLAR ATIRLARI =====
+    if text == "👨 Erkaklar atirlari":
 
-        order = user_orders.get(user.id)
-
-        await context.bot.forward_message(
-            ADMIN_ID,
-            update.message.chat.id,
-            update.message.message_id
+        caption1 = (
+            "🧴 *Dior Sauvage* 🌿\n"
+            "━━━━━━━━━━━━━━\n"
+            "🔥 Erkaklar orasida *TOP hit*\n"
+            "🌪 Kuchli, jozibali va universal hid\n\n"
+            "💰 *Narxi:* *420,000 so‘m*\n"
+            "⏳ *Stoyka:* 8–12 soat\n"
+            "🎁 *Bonus:* bepul upakovka\n\n"
+            "📦 Buyurtma uchun: *Buyurtma berish* tugmasini bosing 👇"
+        )
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=IMG_DIOR_SAUVAGE,
+            caption=esc(caption1),
+            parse_mode="MarkdownV2"
         )
 
-        await context.bot.send_message(
-            ADMIN_ID,
-            "*Yangi buyurtma*\n\n"
-            f"User: @{user.username}\n"
-            f"ID: {user.id}\n"
-            f"Xizmat: {order}",
-            parse_mode="Markdown"
+        caption2 = (
+            "🧴 *Louis Vuitton Imagination* 🍋\n"
+            "━━━━━━━━━━━━━━\n"
+            "✨ *Fresh & luxury* segment\n"
+            "🌟 Trenddagi eng yoqimli hidlardan biri\n\n"
+            "💰 *Narxi:* *470,000 so‘m*\n"
+            "⏳ *Stoyka:* 10–12 soat\n"
+            "🚚 *Yetkazib berish:* bor\n\n"
+            "📦 Buyurtma uchun: *Buyurtma berish* tugmasini bosing 👇"
+        )
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=IMG_LV_IMAGINATION,
+            caption=esc(caption2),
+            parse_mode="MarkdownV2"
         )
 
-        waiting_check.remove(user.id)
+        caption3 = (
+            "🧴 *Bleu de Chanel* 🌊\n"
+            "━━━━━━━━━━━━━━\n"
+            "🎩 Elegant & classic — *premium tanlov*\n"
+            "💎 Ofis, uchrashuv, har kuni uchun mos\n\n"
+            "💰 *Narxi:* *450,000 so‘m*\n"
+            "⏳ *Stoyka:* 8–10 soat\n"
+            "✅ *Sovg‘aga ham ideal*\n\n"
+            "📦 Buyurtma uchun: *Buyurtma berish* tugmasini bosing 👇"
+        )
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=IMG_BLEU_DE_CHANEL,
+            caption=esc(caption3),
+            parse_mode="MarkdownV2"
+        )
 
+    # ===== AYOLLAR ATIRLARI =====
+    elif text == "👩 Ayollar atirlari":
+
+        caption1 = (
+            "🌸 *Chanel Chance* 💎\n"
+            "━━━━━━━━━━━━━━\n"
+            "✨ Nafis va klassik ayollar atiri\n"
+            "💃 Kundalik va bayram uchun mos\n\n"
+            "💰 *Narxi:* *430,000 so‘m*\n"
+            "⏳ *Stoyka:* 7–10 soat\n"
+            "🎁 *Bonus:* bepul upakovka\n\n"
+            "📦 Buyurtma uchun: *Buyurtma berish* tugmasini bosing 👇"
+        )
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=IMG_CHANEL_CHANCE,
+            caption=esc(caption1),
+            parse_mode="MarkdownV2"
+        )
+
+        caption2 = (
+            "🌺 *Gucci Flora* 🌷\n"
+            "━━━━━━━━━━━━━━\n"
+            "💕 Gulli va yumshoq aroma\n"
+            "🌸 Juda yoqimli, ayollarga mos\n\n"
+            "💰 *Narxi:* *390,000 so‘m*\n"
+            "⏳ *Stoyka:* 6–9 soat\n"
+            "🚚 *Yetkazib berish:* bor\n\n"
+            "📦 Buyurtma uchun: *Buyurtma berish* tugmasini bosing 👇"
+        )
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=IMG_GUCCI_FLORA,
+            caption=esc(caption2),
+            parse_mode="MarkdownV2"
+        )
+
+        caption3 = (
+            "🔥 *Baccarat Rouge 540* 💎\n"
+            "━━━━━━━━━━━━━━\n"
+            "👑 Premium segment — *status hidi*\n"
+            "✨ Juda kuchli va esda qoladigan aroma\n\n"
+            "💰 *Narxi:* *490,000 so‘m*\n"
+            "⏳ *Stoyka:* 10–14 soat\n"
+            "✅ *Sovg‘aga TOP*\n\n"
+            "📦 Buyurtma uchun: *Buyurtma berish* tugmasini bosing 👇"
+        )
+        await context.bot.send_photo(
+            chat_id=chat_id,
+            photo=IMG_BACCARAT,
+            caption=esc(caption3),
+            parse_mode="MarkdownV2"
+        )
+
+    # ===== CHEGIRMALAR =====
+    elif "Chegirmalar" in text:
+        msg = (
+            "🔥 *Bugungi chegirmalar* 💸\n"
+            "━━━━━━━━━━━━━━\n\n"
+            "✅ *Louis Vuitton Imagination* — *-20%*\n"
+            "✅ *Dior Sauvage* — *-15%*\n\n"
+            "⏳ Aksiya bugun amal qiladi\\!\n"
+            "📦 Buyurtma: *Buyurtma berish* 👇"
+        )
         await update.message.reply_text(
-            "*Chek qabul qilindi. Admin tekshiradi.*",
-            parse_mode="Markdown"
+            msg,
         )
 
-def main():
-    app = Application.builder().token(BOT_TOKEN).build()
+    # ===== BUYURTMA BOSHLASH =====
+    elif text == "📦 Buyurtma berish":
+        order_mode[user_id] = True
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
-    app.add_handler(CallbackQueryHandler(buttons))
-    app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
+        msg = (
+            "📦 *Buyurtma berish* 🛒\n"
+            "━━━━━━━━━━━━━━\n\n"
+            "Iltimos, quyidagilarni *bitta xabarda* yuboring:\n\n"
+            "👤 Ism:\n"
+            "📞 Telefon:\n"
+            "🧴 Qaysi atir:\n"
+            "📏 Hajmi \\(50ml / 100ml\\):\n"
+            "📍 Manzil:\n\n"
+            "✅ Yuborganingizdan so‘ng buyurtma adminga ketadi\\."
+        )
+        await update.message.reply_text(
+            msg,
+            parse_mode="MarkdownV2"
+        )
 
-    app.run_polling()
+    # ===== ADMIN BILAN BOG'LANISH =====
+    elif text == "📞 Admin bilan bog‘lanish":
+        contact_mode[user_id] = True
 
-if __name__ == "__main__":
-    main()
+        msg = (
+            "📞 *Admin bilan bog‘lanish*\n"
+            "━━━━━━━━━━━━━━\n\n"
+            f"👤 Admin: {esc(ADMIN_USERNAME)}\n"
+            f"📱 Telefon: {esc(ADMIN_PHONE)}\n\n"
+            "✍️ Savolingizni yozing — men adminga yuboraman\\.\n"
+            "🕒 Tez orada javob beriladi\\."
+        )
+        await update.message.reply_text(
+            msg,
+            parse_mode="MarkdownV2"
+        )
+
+    # ===== BUYURTMA ADMIN GA BORADI =====
+    elif user_id in order_mode:
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=f"🛒 Yangi buyurtma!\n\n{text}\n\n👤 User: {user.first_name} | ID: {user_id}"
+        )
+
+        msg = (
+            "✅ *Buyurtmangiz qabul qilindi\\!* 🎉\n"
+            "━━━━━━━━━━━━━━\n"
+            "⏱️ Admin tez orada siz bilan bog‘lanadi\\.\n\n"
+            "🙂 Menyudan davom etishingiz mumkin 👇"
+        )
+        await update.message.reply_text(
+            msg,
+            parse_mode="MarkdownV2",
+            reply_markup=reply_markup
+        )
+
+        del order_mode[user_id]
+
+    # ===== SAVOL ADMIN GA BORADI =====
+    elif user_id in contact_mode:
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=f"📩 Mijoz savoli:\n\n{text}\n\n👤 User: {user.first_name} | ID: {user_id}"
+        )
+
+        msg = (
+            "✅ *Xabaringiz adminga yuborildi\\!* 📨\n"
+            "━━━━━━━━━━━━━━\n"
+            "🕒 Admin tez orada javob beradi\\.\n\n"
+            "🙂 Menyudan davom eting 👇"
+        )
+        await update.message.reply_text(
+            msg,
+            parse_mode="MarkdownV2",
+            reply_markup=reply_markup
+        )
+
+        del contact_mode[user_id]
+
+    else:
+        await update.message.reply_text(
+            "🙂 Iltimos, pastdagi *menyu tugmalari* orqali tanlang 👇",
+            reply_markup=reply_markup,
+            parse_mode="MarkdownV2"
+        )
+
+
+if TOKEN == "PASTE_TOKEN_HERE" or not TOKEN.strip():
+    raise RuntimeError("TOKEN ni qo'ymagansan. TOKEN = \"...\" ichiga BotFather tokenni joyla.")
+
+app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start))
+app.add_handler(MessageHandler(filters.TEXT, message_handler))
+app.run_polling()
